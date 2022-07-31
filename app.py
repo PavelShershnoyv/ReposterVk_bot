@@ -1,10 +1,16 @@
+import asyncio
+import time
+from create_bot import bot
+from get_posts import get_post
 from aiogram import executor, types
 from create_bot import dp
 from KeyBoard import kb_main, kb_source, kb_users_on, kb_users_off
 from handler import is_user_added, set_status_to_ON, \
-    set_status_to_OFF, is_vk_account_connected, get_info_about_current_account
+    set_status_to_OFF, is_vk_account_connected, get_info_about_current_account, get_list_of_sources
 from database_queries import add_new_user, disconnect_vk_account
 from connect_VK import command_oauth
+from add_sourses import ans_source
+from delete_sourses import answer_source
 
 
 @dp.message_handler(commands=['start'])
@@ -25,7 +31,16 @@ async def command_start(message: types.Message):
 @dp.message_handler()
 async def commands_main(message: types.Message):
     if message.text == 'Помощь':
-        await message.answer('Помощь скоро будет')
+        await message.answer('''
+        Прежде чем VK_Reposter начнёт свою работу необходимо подключить аккаунт от социальной сети ВКонтакте. Это можно сделать перейдя в раздел «Аккаунт ВКонтакте». В этом же разделе в будущем вы сможете отключить свой аккаунт (если пожелаете его сменить), либо узнать, какой аккаунт подключён в данный момент. Без подключенного аккаунта VK_Reposter работать не может!
+
+Раздел «Настройка источников» предназначен для изменения списка сообществ и пользователей, от которых вы хотите получать посты. Для добавления нового источника потребуется ссылка на него.
+
+Внимание!
+— VK_Reposter работает исключительно с сообществами и пользователями социальной сети ВКонтакте.
+— При нахождении в каком-либо разделе меню посты не приходят. Это сделано для удобства при настройке бота. Поэтому всегда возвращайтесь в главное меню!
+— Для корректной настройки бота всё взаимодействие с ним должно происходить при помощи встроенной мини-клавиатуры, расположенной под текстовым полем для отправки сообщения.
+''')
     if message.text == 'Аккаунт ВКонтакте':
         id_tg = message.from_user.id
         set_status_to_OFF(id_tg)
@@ -51,7 +66,45 @@ async def commands_main(message: types.Message):
             await message.answer_photo(info_about_current_account['url_of_photo'],
                                        f"{info_about_current_account['first_name']} {info_about_current_account['last_name']}"
                                        f" (@{info_about_current_account['screen_name']})")
+    if message.text == 'Добавить источник':
+        await ans_source(message)
+    if message.text == 'Список источников':
+        lst = get_list_of_sources(message.from_user.id)
+        communities = 'Нет добавленных' if lst['group_list'] is None else "\n".join(lst['group_list'])
+        users = 'Нет добавленных' if lst['user_list'] is None else "\n".join(lst['user_list'])
+        await message.answer(f'Сообщества: {communities} \n'
+                             f'\nПользователи: {users}')
+    if message.text == 'Удалить источник':
+        await answer_source(message)
 
 
+@dp.message_handler()
+async def send_post(post, message: types.Message):
+    by = post['by']
+    ans = by
+    photo = ''
+    if post['text']:
+        ans += post['text']
+    if post['photo']:
+        photo = post['photo']
+    if post['link']:
+        ans += post['link']
+    if post['doc']:
+        ans += post['doc']
+    if post['video']:
+        video = post['video']
+    await message.answer(ans)
+    await message.answer_photo(photo)
 
-executor.start_polling(dp, skip_updates=True)
+
+async def is_enabled():
+  while True:
+    await bot.send_message(chat_id=1071458321, text='Hello')
+    await asyncio.sleep(3)
+
+
+async def on_startup(x):
+    asyncio.create_task(is_enabled())
+
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
