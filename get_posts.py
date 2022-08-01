@@ -2,11 +2,12 @@
 from database_queries import get_all_id_tg, get_user_info, set_end_time
 from requests_to_VK_API import get_video, get_newsfeed
 import time
+from create_bot import bot
 import asyncio
 from handler import get_current_unix_time
 
 
-def get_info_from_posts(info, vk_token):
+async def get_info_from_posts(info, vk_token, id_tg):
     id_name = {}
     groups = info['response']['groups']
     profiles = info['response']['profiles']
@@ -50,7 +51,25 @@ def get_info_from_posts(info, vk_token):
             'video': url_video
         }
         print(result)
-        # send_post(result)
+        video = ''
+        if url_video:
+            video = '\n'.join(url_video)
+        ans = f'''
+Отправитель: {by}\n
+{text}
+{video}
+'''
+        await bot.send_message(chat_id=id_tg, text=f'{ans}')
+        if url_photo:
+            for photo in url_photo:
+                await bot.send_photo(chat_id=id_tg, photo=photo)
+        # if url_doc:
+        #     for doc in url_doc:
+        #         print(url_doc[doc])
+        #         await bot.send_document(chat_id=id_tg, document=url_doc[doc], caption=doc)
+
+
+
 
 
 async def get_post():
@@ -63,8 +82,8 @@ async def get_post():
             posts = get_newsfeed(user['vk_token'], user['end_time'],
                                  ','.join([f'g{group_id}' for group_id in user['group_ids'].split(',')]), user['user_ids'])
             set_end_time(id, get_current_unix_time())
-            get_info_from_posts(posts, user['vk_token'])
-            await asyncio.sleep(1)
+            await get_info_from_posts(posts, user['vk_token'], id)
+        await asyncio.sleep(3)
 
 
 # if __name__ == '__main__':

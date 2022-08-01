@@ -78,33 +78,15 @@ async def commands_main(message: types.Message):
         await answer_source(message)
 
 
-@dp.message_handler()
-async def send_post(post, message: types.Message):
-    by = post['by']
-    ans = by
-    photo = ''
-    if post['text']:
-        ans += post['text']
-    if post['photo']:
-        photo = post['photo']
-    if post['link']:
-        ans += post['link']
-    if post['doc']:
-        ans += post['doc']
-    if post['video']:
-        video = post['video']
-    await message.answer(ans)
-    await message.answer_photo(photo)
 
-
-async def is_enabled():
-  while True:
-    await bot.send_message(chat_id=1071458321, text='Hello')
-    await asyncio.sleep(3)
+# async def is_enabled():
+#   while True:
+#     await bot.send_message(chat_id=1071458321, text='Hello')
+#     await asyncio.sleep(3)
 
 
 async def on_startup(x):
-    asyncio.create_task(is_enabled())
+    asyncio.create_task(get_post())
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
