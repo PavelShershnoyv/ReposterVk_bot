@@ -72,7 +72,7 @@ def set_group_ids(id_tg, value):
     UPDATE Users
     SET group_ids = '{value}'
     WHERE id_tg = '{id_tg}'
-    ''' if value is not None else f'''
+    ''' if value else f'''
     UPDATE Users
     SET group_ids = NULL
     WHERE id_tg = '{id_tg}'
@@ -94,7 +94,7 @@ def set_user_ids(id_tg, value):
     UPDATE Users
     SET user_ids = '{value}'
     WHERE id_tg = '{id_tg}'
-    ''' if value is not None else f'''
+    ''' if value else f'''
     UPDATE Users
     SET user_ids = NULL
     WHERE id_tg = '{id_tg}'

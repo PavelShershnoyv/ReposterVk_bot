@@ -10,7 +10,7 @@ def add_group(id_tg, group_id, user_info):
     vk_token = user_info['vk_token']
     current_group_ids = user_info['group_ids']
 
-    if current_group_ids is not None and str(group_id) in current_group_ids.split(','):
+    if current_group_ids and str(group_id) in current_group_ids.split(','):
         return 'repeat group'
 
     group_info = get_info_about_groups(group_id, vk_token)['response'][0]
@@ -18,7 +18,7 @@ def add_group(id_tg, group_id, user_info):
     if group_info['is_closed'] and group_id not in get_user_groups(id_vk, vk_token)['response']['items']:
         return 'closed group'
 
-    new_group_ids = f'{current_group_ids},{group_id}' if current_group_ids is not None else str(group_id)
+    new_group_ids = f'{current_group_ids},{group_id}' if current_group_ids else str(group_id)
     set_group_ids(id_tg, new_group_ids)
 
     return 'group'
@@ -40,7 +40,7 @@ def add_source(id_tg, link_to_source):
     except TypeError:
         return None
 
-    if user_info['group_ids'] is None and user_info['user_ids'] is None:
+    if not user_info['group_ids'] and not user_info['user_ids']:
         set_end_time(id_tg, get_current_unix_time())
 
     if info_about_source['type'] == 'group':
@@ -55,7 +55,7 @@ def add_user(id_tg, user_id, user_info):
     vk_token = user_info['vk_token']
     current_user_ids = user_info['user_ids']
 
-    if current_user_ids is not None and str(user_id) in current_user_ids.split(','):
+    if current_user_ids and str(user_id) in current_user_ids.split(','):
         return 'repeat user'
 
     account_info = get_account_info(user_id, vk_token)['response'][0]
@@ -63,7 +63,7 @@ def add_user(id_tg, user_id, user_info):
     if account_info['is_closed'] and user_id not in get_user_friends(vk_token)['response']['items']:
         return 'closed user'
 
-    new_user_ids = f'{current_user_ids},{user_id}' if current_user_ids is not None else str(user_id)
+    new_user_ids = f'{current_user_ids},{user_id}' if current_user_ids else str(user_id)
     set_user_ids(id_tg, new_user_ids)
 
     return 'user'
@@ -78,13 +78,7 @@ def delete_group(id_tg, group_numbers):
     for group_number in sorted(group_numbers, reverse=True):
         current_group_ids.pop(group_number)
 
-    if len(current_group_ids) == 0:
-        new_group_ids = None
-    elif len(current_group_ids) == 1:
-        new_group_ids = current_group_ids[0]
-    else:
-        new_group_ids = ','.join(current_group_ids)
-
+    new_group_ids = None if not len(current_group_ids) else ','.join(current_group_ids)
     set_group_ids(id_tg, new_group_ids)
 
 
@@ -128,13 +122,7 @@ def delete_user(id_tg, user_numbers):
     for user_number in sorted(user_numbers, reverse=True):
         current_user_ids.pop(user_number)
 
-    if len(current_user_ids) == 0:
-        new_user_ids = None
-    elif len(current_user_ids) == 1:
-        new_user_ids = current_user_ids[0]
-    else:
-        new_user_ids = ','.join(current_user_ids)
-
+    new_user_ids = None if not len(current_user_ids) else ','.join(current_user_ids)
     set_user_ids(id_tg, new_user_ids)
 
 
@@ -145,7 +133,7 @@ def get_current_unix_time():
 def get_group_list(id_tg):
     user_info = get_user_info(id_tg)
 
-    if user_info['group_ids'] is None:
+    if not user_info['group_ids']:
         return None
 
     data = get_info_about_groups(user_info['group_ids'], user_info['vk_token'])['response']
@@ -205,7 +193,7 @@ def get_list_of_sources(id_tg):
 def get_user_list(id_tg):
     user_info = get_user_info(id_tg)
 
-    if user_info['user_ids'] is None:
+    if not user_info['user_ids']:
         return None
 
     data = get_account_info(user_info['user_ids'], user_info['vk_token'])['response']
@@ -220,7 +208,7 @@ def is_user_added(id_tg):
 
 def is_vk_account_connected(id_tg):
     user_info = get_user_info(id_tg)
-    return user_info['id_vk'] is not None and user_info['vk_token'] is not None
+    return user_info['id_vk'] and user_info['vk_token']
 
 
 def set_status_to_ON(id_tg):
